@@ -1,0 +1,26 @@
+src/
+├── App.jsx
+├── main.jsx
+├── pages/
+│   ├── Home.jsx
+│   ├── Services.jsx
+│   ├── Careers.jsx
+│   ├── Contact.jsx
+│   ├── Application.jsx
+│   └── admin/        // New admin directory
+│       ├── Dashboard.jsx
+│       ├── ManageServices.jsx
+│       ├── ManageCareers.jsx
+│       ├── ManageApplications.jsx
+│       └── Login.jsx   // For admin login
+├── components/
+│   ├── Navbar.jsx
+│   ├── Footer.jsx
+│   ├── Hero.jsx
+│   ├── ServiceCard.jsx
+│   ├── Testimonial.jsx
+│   ├── JobListing.jsx
+│   ├── ContactForm.jsx
+│   └── AdminNavbar.jsx  // New admin-specific navbar
+├── assets/
+└── styles/
