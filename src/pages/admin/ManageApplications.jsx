@@ -1,34 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiEye, FiCheck, FiX, FiDownload, FiSearch } from 'react-icons/fi';
-
-const applications = [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    position: 'Front-End Developer',
-    status: 'Pending',
-    date: '2023-05-15',
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    position: 'UX Designer',
-    status: 'Shortlisted',
-    date: '2023-05-14',
-  },
-  {
-    id: 3,
-    name: 'Michael Johnson',
-    email: 'michael.j@example.com',
-    position: 'Back-End Developer',
-    status: 'Rejected',
-    date: '2023-05-13',
-  },
-];
+import { supabase } from './supabaseClient'; // Ensure this path is correct
 
 function ManageApplications() {
+  const [applications, setApplications] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch applications from Supabase
+  useEffect(() => {
+    const fetchApplications = async () => {
+      const { data, error } = await supabase
+        .from('applications') // Make sure this table exists in your Supabase database
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching applications:', error);
+      } else {
+        setApplications(data);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleAction = (id, action) => {
+    // Handle shortlist, reject, view, etc.
+    // You can update the status in the Supabase database based on the action
+    console.log(`Action: ${action} on application with ID: ${id}`);
+    // Example of updating status for shortlisted applications
+    if (action === 'shortlist') {
+      supabase
+        .from('applications')
+        .update({ status: 'Shortlisted' })
+        .eq('id', id)
+        .then(({ error }) => {
+          if (error) console.error('Error updating application:', error);
+          else setApplications((prev) => prev.map((app) => app.id === id ? { ...app, status: 'Shortlisted' } : app));
+        });
+    }
+  };
+
+  const filteredApplications = applications.filter((app) => {
+    return app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           app.email.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -45,6 +65,8 @@ function ManageApplications() {
               type="text"
               placeholder="Search applications..."
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              value={searchQuery}
+              onChange={handleSearchChange}
             />
           </div>
         </div>
@@ -72,7 +94,7 @@ function ManageApplications() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {applications.map((application) => (
+                {filteredApplications.map((application) => (
                   <tr key={application.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -113,6 +135,7 @@ function ManageApplications() {
                         <button
                           className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
                           title="Shortlist"
+                          onClick={() => handleAction(application.id, 'shortlist')}
                         >
                           <FiCheck className="h-5 w-5" />
                         </button>
@@ -138,17 +161,9 @@ function ManageApplications() {
           <div className="bg-white px-6 py-3 flex items-center justify-between border-t border-gray-200">
             <div className="flex-1 flex justify-between items-center">
               <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to <span className="font-medium">3</span> of{' '}
-                <span className="font-medium">3</span> applications
+                Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredApplications.length}</span> of{' '}
+                <span className="font-medium">{applications.length}</span> applications
               </p>
-              <div className="flex space-x-2">
-                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  Previous
-                </button>
-                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  Next
-                </button>
-              </div>
             </div>
           </div>
         </div>

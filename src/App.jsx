@@ -13,6 +13,10 @@ import ManageCareers from './pages/admin/ManageCareers';
 import ManageApplications from './pages/admin/ManageApplications';
 import Login from './pages/admin/Login';
 import AdminNavbar from './components/AdminNavbar';
+import NotFound from './pages/NotFound';
+import SignUp from './pages/SignUp';
+import Login1 from './pages/Login';
+import Dashboard1 from './pages/users/Dashboard';
 
 function App() {
   return (
@@ -25,6 +29,10 @@ function App() {
           <Route path="/careers" element={<><Navbar /><Careers /><Footer /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /><Footer /></>} />
           <Route path="/application" element={<><Navbar /><Application /><Footer /></>} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login1 />} />
+          <Route path="/dashboard" element={<Dashboard1 />} />
+
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<Login />} />
@@ -32,6 +40,8 @@ function App() {
           <Route path="/admin/services" element={<><AdminNavbar /><ManageServices /></>} />
           <Route path="/admin/careers" element={<><AdminNavbar /><ManageCareers /></>} />
           <Route path="/admin/applications" element={<><AdminNavbar /><ManageApplications /></>} />
+          {/* 404 Not Found */} 
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </Router>

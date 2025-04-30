@@ -1,40 +1,79 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiEdit2, FiTrash2, FiPlus, FiBriefcase, FiDollarSign, FiMapPin, FiClock } from 'react-icons/fi';
-
-const jobListings = [
-  {
-    id: 1,
-    title: 'Front-End Developer',
-    department: 'Engineering',
-    location: 'Remote',
-    type: 'Full-time',
-    salary: '$90,000 - $120,000',
-    posted: '2 days ago',
-    applications: 15,
-  },
-  {
-    id: 2,
-    title: 'Back-End Developer',
-    department: 'Engineering',
-    location: 'San Francisco, CA',
-    type: 'Full-time',
-    salary: '$100,000 - $130,000',
-    posted: '1 week ago',
-    applications: 8,
-  },
-  {
-    id: 3,
-    title: 'UX Designer',
-    department: 'Design',
-    location: 'New York, NY',
-    type: 'Contract',
-    salary: '$70 - $90/hr',
-    posted: '3 days ago',
-    applications: 12,
-  },
-];
+import { supabase } from './supabaseClient'; // Import supabase client
 
 function ManageCareers() {
+  const [jobListings, setJobListings] = useState([]);
+  const [showForm, setShowForm] = useState(false); // Track form visibility
+  const [newJob, setNewJob] = useState({
+    title: '',
+    department: '',
+    location: '',
+    type: '',
+    salary: '',
+    posted: '',
+    applications: 0,
+    description: '',
+    skills: '',
+  });
+
+  // Fetch job listings from Supabase
+  useEffect(() => {
+    const fetchJobListings = async () => {
+      const { data, error } = await supabase
+        .from('job_listings') // Your table name in Supabase
+        .select('*'); // Select all columns
+
+      if (error) {
+        console.error('Error fetching job listings:', error);
+      } else {
+        setJobListings(data); // Set the job listings state
+      }
+    };
+
+    fetchJobListings(); // Call the function to fetch data
+  }, []); // Empty dependency array to fetch data only once when component mounts
+
+  // Handle form field changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewJob({
+      ...newJob,
+      [name]: value,
+    });
+  };
+
+  // Handle job form submission
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+
+    const { error } = await supabase
+      .from('job_listings') // Your table name
+      .insert([{
+        ...newJob, // Insert the new job
+      }]);
+
+    if (error) {
+      console.error('Error adding job:', error);
+    } else {
+      setShowForm(false); // Hide form after successful submission
+      setNewJob({
+        title: '',
+        department: '',
+        location: '',
+        type: '',
+        salary: '',
+        posted: '',
+        applications: 0,
+        description: '',
+        skills: '',
+      });
+      // Re-fetch job listings to reflect the newly added job
+      const { data } = await supabase.from('job_listings').select('*');
+      setJobListings(data);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -43,11 +82,135 @@ function ManageCareers() {
             <h1 className="text-3xl font-bold text-gray-800">Manage Job Listings</h1>
             <p className="text-gray-600 mt-2">Create and manage your company's career opportunities</p>
           </div>
-          <button className="mt-4 md:mt-0 flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+          <button
+            className="mt-4 md:mt-0 flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            onClick={() => setShowForm(!showForm)} // Toggle form visibility
+          >
             <FiPlus className="mr-2" />
             Add New Job
           </button>
         </div>
+
+        {/* Display the form to add a new job if showForm is true */}
+        {showForm && (
+          <div className="bg-white shadow-sm rounded-xl p-6 mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Add New Job</h2>
+            <form onSubmit={handleFormSubmit}>
+              <div className="mb-4">
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700">Job Title</label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={newJob.title}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="department" className="block text-sm font-medium text-gray-700">Department</label>
+                <input
+                  type="text"
+                  id="department"
+                  name="department"
+                  value={newJob.department}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  value={newJob.location}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700">Job Type</label>
+                <input
+                  type="text"
+                  id="type"
+                  name="type"
+                  value={newJob.type}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="salary" className="block text-sm font-medium text-gray-700">Salary</label>
+                <input
+                  type="text"
+                  id="salary"
+                  name="salary"
+                  value={newJob.salary}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="posted" className="block text-sm font-medium text-gray-700">Posted</label>
+                <input
+                  type="text"
+                  id="posted"
+                  name="posted"
+                  value={newJob.posted}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  required
+                />
+              </div>
+              {/* Add Description and Skills fields */}
+              <div className="mb-4">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Job Description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={newJob.description}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="skills" className="block text-sm font-medium text-gray-700">Required Skills</label>
+                <input
+                  type="text"
+                  id="skills"
+                  name="skills"
+                  value={newJob.skills}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                >
+                  Add Job
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         <div className="bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -92,6 +255,8 @@ function ManageCareers() {
                           <FiDollarSign className="mr-1.5 flex-shrink-0" />
                           {job.salary}
                         </div>
+                        <div className="text-gray-700"><strong>Description:</strong> {job.description}</div>
+                        <div className="text-gray-700"><strong>Skills:</strong> {job.skills}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -132,14 +297,6 @@ function ManageCareers() {
                 Showing <span className="font-medium">1</span> to <span className="font-medium">3</span> of{' '}
                 <span className="font-medium">3</span> jobs
               </p>
-              <div className="flex space-x-2">
-                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  Previous
-                </button>
-                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  Next
-                </button>
-              </div>
             </div>
           </div>
         </div>
