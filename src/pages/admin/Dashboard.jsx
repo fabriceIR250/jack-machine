@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from './supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -14,6 +15,7 @@ function Dashboard() {
   const [newApplications, setNewApplications] = useState(0);
   const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const navigate = useNavigate();
 
   // Check authentication and set localStorage
@@ -43,7 +45,7 @@ function Dashboard() {
     checkAuth();
   }, [navigate]);
 
-  // Fetch data from Supabase
+  // Fetch initial data from Supabase
   useEffect(() => {
     if (loading) return;
 
@@ -71,18 +73,66 @@ function Dashboard() {
           .order('created_at', { ascending: false })
           .limit(5);
         setRecentActivities(activityData || []);
+
+        // Fetch initial unread messages count
+        const { count: unreadCount } = await supabase
+          .from('user_messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_read', false);
+        setUnreadMessages(unreadCount || 0);
+
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Failed to load dashboard data');
       }
     };
 
     fetchData();
   }, [loading]);
 
+  // Set up real-time subscription for new messages
+  useEffect(() => {
+    if (loading) return;
+
+    const messageSubscription = supabase
+      .channel('user_messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'user_messages'
+      }, (payload) => {
+        // Show toast notification for new message
+        toast.success(
+          <div>
+            <p className="font-medium">New message from user!</p>
+            <p className="text-sm truncate">{payload.new.message_content}</p>
+          </div>,
+          {
+            duration: 5000,
+            position: 'top-right',
+            icon: '✉️',
+            style: {
+              background: '#e0f2fe',
+              borderLeft: '4px solid #38bdf8',
+            },
+          }
+        );
+
+        // Update unread messages count
+        setUnreadMessages(prev => prev + 1);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messageSubscription);
+    };
+  }, [loading]);
+
   const statCards = [
     { title: 'Total Services', value: totalServices, color: 'bg-indigo-500' },
     { title: 'Total Careers', value: totalCareers, color: 'bg-emerald-500' },
     { title: 'New Applications', value: newApplications, color: 'bg-amber-500' },
+    { title: 'Unread Messages', value: unreadMessages, color: 'bg-rose-500' },
   ];
 
   if (loading) {
@@ -98,13 +148,26 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {/* Toast Notifications Container */}
+      <Toaster 
+        toastOptions={{
+          className: 'text-sm',
+          style: {
+            background: '#f0f9ff',
+            borderLeft: '4px solid #0ea5e9',
+            padding: '12px 16px',
+            color: '#0369a1',
+          },
+        }}
+      />
+      
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800">Dashboard Overview</h1>
           <p className="text-gray-600 mt-2">Welcome back! Here's what's happening today.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statCards.map((card, index) => (
             <motion.div
               key={card.title}

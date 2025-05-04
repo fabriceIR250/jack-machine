@@ -10,28 +10,42 @@ function ManageApplications() {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Add error state
   const navigate = useNavigate();
 
   // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
-      const storedUser = localStorage.getItem('adminAuth');
-      if (storedUser) {
-        setLoading(false);
-        return;
-      }
+      try {
+        const storedUser = localStorage.getItem('adminAuth');
+        if (storedUser) {
+          setLoading(false);
+          return;
+        }
 
-      const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          console.error('Authentication error:', authError);
+          setError('Authentication failed');
+          navigate('/admin/login');
+          return;
+        }
 
-      if (!user) {
-        navigate('/admin/login');
-      } else {
-        const customUser = {
-          id: user.id,
-          isAuthenticated: true,
-          username: user.user_metadata?.username || 'unknown',
-        };
-        localStorage.setItem('user', JSON.stringify(customUser));
+        if (!user) {
+          navigate('/admin/login');
+        } else {
+          const customUser = {
+            id: user.id,
+            isAuthenticated: true,
+            username: user.user_metadata?.username || 'unknown',
+          };
+          localStorage.setItem('user', JSON.stringify(customUser));
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        setError('Authentication check failed');
         setLoading(false);
       }
     };
@@ -45,19 +59,39 @@ function ManageApplications() {
 
     const fetchApplications = async () => {
       try {
-        setLoading(true);
-        const { data, error } = await supabase.from('applications').select('*');
-        if (error) throw error;
-        setApplications(data || []);
-      } catch (error) {
-        console.error('Error fetching applications:', error);
+        setLoading(false);
+        console.log('Fetching applications...');
+        
+        // Add logging to see what's happening
+        const { data, error: fetchError } = await supabase
+          .from('applications')
+          .select('*');
+          
+        if (fetchError) {
+          console.error('Supabase error:', fetchError);
+          setError(`Failed to fetch applications: ${fetchError.message}`);
+          throw fetchError;
+        }
+        
+        console.log('Applications data received:', data);
+        
+        // Check if data is actually received
+        if (!data) {
+          console.warn('No data returned from Supabase');
+          setApplications([]);
+        } else {
+          setApplications(data);
+        }
+      } catch (err) {
+        console.error('Error fetching applications:', err);
+        setError('Failed to load applications');
       } finally {
         setLoading(false);
       }
     };
 
     fetchApplications();
-  }, []);
+  }, [loading]); // Re-run when loading changes
 
   // Debounce the search input
   useEffect(() => {
@@ -79,20 +113,21 @@ function ManageApplications() {
       else if (action === 'reject') newStatus = 'Rejected';
       else return;
 
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('applications')
         .update({ status: newStatus })
         .eq('id', id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       setApplications((prev) =>
         prev.map((app) =>
           app.id === id ? { ...app, status: newStatus } : app
         )
       );
-    } catch (error) {
-      console.error(`Error updating status:`, error);
+    } catch (err) {
+      console.error(`Error updating status:`, err);
+      setError(`Failed to update application: ${err.message}`);
     }
   };
 
@@ -115,16 +150,44 @@ function ManageApplications() {
 
   const handleDownloadCV = async (fileName) => {
     try {
-      const { data, error } = await supabase.storage
+      const { data, error: downloadError } = await supabase.storage
         .from('cv')
         .createSignedUrl(`cv/${fileName}`, 60); // 60 seconds expiration
 
-      if (error) throw error;
+      if (downloadError) throw downloadError;
       window.open(data.signedUrl, '_blank');
-    } catch (error) {
-      console.error('Error downloading CV:', error);
+    } catch (err) {
+      console.error('Error downloading CV:', err);
+      setError(`Failed to download CV: ${err.message}`);
     }
   };
+
+  // Debug section to show if there's an error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h2 className="text-lg font-medium text-red-800">Error</h2>
+            <p className="text-red-700">{error}</p>
+            <button 
+              onClick={() => {setError(null); setLoading(true);}} 
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow p-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Debugging Information</h1>
+            <p className="mb-2"><strong>Authentication Status:</strong> {localStorage.getItem('adminAuth') ? 'Authenticated via localStorage' : 'Not authenticated via localStorage'}</p>
+            <p className="mb-2"><strong>User Info:</strong> {localStorage.getItem('user') ? JSON.stringify(localStorage.getItem('user')) : 'No user info in localStorage'}</p>
+            <p><strong>Applications Count:</strong> {applications.length}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -164,9 +227,31 @@ function ManageApplications() {
           </div>
         </div>
 
+        {/* Add debug information */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <h3 className="font-medium text-blue-800">Debug Information</h3>
+          <p className="text-blue-700">Applications loaded: {applications.length}</p>
+          <p className="text-blue-700">Current search: {searchQuery || '(none)'}</p>
+          <p className="text-blue-700">Filtered results: {filteredApplications.length}</p>
+        </div>
+
         {filteredApplications.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-6 text-center">
             <p className="text-gray-500">No applications found</p>
+            {applications.length > 0 && searchQuery && (
+              <p className="mt-2 text-sm text-gray-500">Try adjusting your search criteria</p>
+            )}
+            {applications.length === 0 && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-500">There are no applications in the database.</p>
+                <button 
+                  onClick={() => setLoading(true)} 
+                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Refresh Data
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
