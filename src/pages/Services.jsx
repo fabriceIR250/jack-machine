@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import ServiceCard from '../components/ServiceCard';
-import { supabase } from './admin/supabaseClient'; // 👈 Use imported client
+import { supabase } from './admin/supabaseClient';
 import {
-  Wrench, Clock, Shield, Cog, Droplet, Gauge, GraduationCap, Construction,
-  Lightbulb, Users, Check
+  Wrench, Clock, Shield, Cog, Droplet, Gauge,
+  GraduationCap, Construction, Lightbulb, Users, Check
 } from 'lucide-react';
 
 // Map icon names from DB to Lucide icons
@@ -31,7 +31,7 @@ function Services() {
         .select('*');
 
       if (error) {
-        console.error('Error fetching services:', error);
+        console.error('Error fetching services:', error.message);
       } else {
         setServices(data);
       }
@@ -55,7 +55,7 @@ function Services() {
             <ServiceCard
               key={index}
               icon={iconMap[service.icon] || <Cog className="h-6 w-6 text-blue-600" />}
-              photo={service.photo}
+              photo={service.image_url} // Use direct public image URL
               title={service.name}
               description={service.description}
               link={service.link}

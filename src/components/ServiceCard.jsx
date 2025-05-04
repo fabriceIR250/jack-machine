@@ -8,8 +8,8 @@ function ServiceCard({ icon, photo, title, description, link }) {
   };
 
   const imageUrl = hasError 
-    ? '/path/to/default-placeholder-image.jpg'  // Default image URL when error occurs
-    : photo;
+    ? '/images/default-placeholder-image.jpg'  // Default image URL (ensure it's placed correctly in the public folder)
+    : photo;  // Use the photo URL passed as a prop
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden h-full flex flex-col transition-transform hover:scale-[1.02] hover:shadow-lg">
@@ -17,7 +17,7 @@ function ServiceCard({ icon, photo, title, description, link }) {
       <div className="relative h-48 w-full">
         <img
           src={imageUrl}
-          alt={title}
+          alt={title} // Provide alt text for accessibility
           className="w-full h-full object-cover"
           onError={handleImageError} // Fallback handler for error
         />

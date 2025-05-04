@@ -2,8 +2,24 @@ import React, { useState, useEffect } from 'react';
 import Hero from '../components/Hero';
 import ServiceCard from '../components/ServiceCard';
 import Testimonial from '../components/Testimonial';
-import { Wrench, Check, Users, ArrowRight, Star } from 'lucide-react';
-import { supabase } from './admin/supabaseClient';  // Import your Supabase client
+import { Wrench, Check, Users, ArrowRight, Star, Clock, Shield, Cog, Droplet, Gauge, GraduationCap, Construction, Lightbulb } from 'lucide-react';
+import { supabase } from './admin/supabaseClient';
+
+// Icon map to match icon names stored in Supabase
+const iconMap = {
+  Wrench: <Wrench className="h-6 w-6 text-blue-600" />,
+  Check: <Check className="h-6 w-6 text-blue-600" />,
+  Users: <Users className="h-6 w-6 text-blue-600" />,
+  Clock: <Clock className="h-6 w-6 text-blue-600" />,
+  Shield: <Shield className="h-6 w-6 text-blue-600" />,
+  Cog: <Cog className="h-6 w-6 text-blue-600" />,
+  Droplet: <Droplet className="h-6 w-6 text-blue-600" />,
+  Gauge: <Gauge className="h-6 w-6 text-blue-600" />,
+  GraduationCap: <GraduationCap className="h-6 w-6 text-blue-600" />,
+  Construction: <Construction className="h-6 w-6 text-blue-600" />,
+  Lightbulb: <Lightbulb className="h-6 w-6 text-blue-600" />,
+  Star: <Star className="h-6 w-6 text-blue-600" />,
+};
 
 export default function Home() {
   const [services, setServices] = useState([]);
@@ -11,19 +27,16 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch services from Supabase
     const fetchServices = async () => {
       try {
         setIsLoading(true);
         const { data, error } = await supabase
-          .from('services')  // Make sure to replace 'services' with your actual table name in Supabase
+          .from('services')
           .select('*');
-          
-        if (error) {
-          throw error;
-        }
-        
-        setServices(data); // Set the fetched data to the state
+
+        if (error) throw error;
+
+        setServices(data);
       } catch (error) {
         console.error('Error fetching services:', error.message);
       } finally {
@@ -31,18 +44,15 @@ export default function Home() {
       }
     };
 
-    // Fetch testimonials from Supabase
     const fetchTestimonials = async () => {
       try {
         const { data, error } = await supabase
-          .from('testimonials')  // Make sure to replace 'testimonials' with your actual table name in Supabase
+          .from('testimonials')
           .select('*');
-          
-        if (error) {
-          throw error;
-        }
-        
-        setTestimonials(data); // Set the fetched data to the state
+
+        if (error) throw error;
+
+        setTestimonials(data);
       } catch (error) {
         console.error('Error fetching testimonials:', error.message);
       }
@@ -52,10 +62,7 @@ export default function Home() {
     fetchTestimonials();
   }, []);
 
-  // Fallback if still loading or error occurs
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="overflow-hidden">
@@ -66,7 +73,7 @@ export default function Home() {
         secondaryButton={{ text: "Contact Us", link: "/contact" }}
         backgroundImage="/images/hero-background.jpg"
       />
-      
+
       {/* Featured Services */}
       <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,9 +87,9 @@ export default function Home() {
             {services.map((service, index) => (
               <ServiceCard 
                 key={index}
-                icon={<Wrench className="h-6 w-6 text-blue-600" />}  // Update based on your data structure
-                photo={service.photo}
-                title={service.title}
+                icon={iconMap[service.icon] || <Wrench className="h-6 w-6 text-blue-600" />}
+                photo={service.image_url}
+                title={service.name}
                 description={service.description}
                 link={service.link}
               />
@@ -90,7 +97,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      
+
       {/* Testimonials */}
       <section className="py-16 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

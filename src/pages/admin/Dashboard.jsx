@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from './supabaseClient'; // Ensure this path is correct
+import { supabase } from './supabaseClient';
+import { useNavigate } from 'react-router-dom';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -11,63 +12,89 @@ function Dashboard() {
   const [totalServices, setTotalServices] = useState(0);
   const [totalCareers, setTotalCareers] = useState(0);
   const [newApplications, setNewApplications] = useState(0);
-  const [recentActivities, setRecentActivities] = useState([]); // State to store recent activities
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // Check authentication and set localStorage
+  useEffect(() => {
+    const checkAuth = async () => {
+      const storedUser = localStorage.getItem('adminAuth');
+      if (storedUser) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        navigate('/admin/login');
+      } else {
+        const customUser = {
+          id: user.id,
+          isAuthenticated: true,
+          username: user.user_metadata?.username || 'unknown',
+        };
+        localStorage.setItem('user', JSON.stringify(customUser));
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   // Fetch data from Supabase
   useEffect(() => {
+    if (loading) return;
+
     const fetchData = async () => {
-      // Fetch total services
-      const { data: servicesData, error: servicesError } = await supabase
-        .from('services') // Updated to match the correct table name
-        .select('id');
-      if (servicesError) {
-        console.error('Error fetching services:', servicesError);
-      } else {
-        setTotalServices(servicesData.length);
-      }
+      try {
+        const { data: servicesData } = await supabase
+          .from('services')
+          .select('id');
+        setTotalServices(servicesData?.length || 0);
 
-      // Fetch total careers (now job_listing)
-      const { data: careersData, error: careersError } = await supabase
-        .from('job_listing') // Updated table name to 'job_listing'
-        .select('id');
-      if (careersError) {
-        console.error('Error fetching careers:', careersError);
-      } else {
-        setTotalCareers(careersData.length);
-      }
+        const { data: careersData } = await supabase
+          .from('job_listings')
+          .select('id');
+        setTotalCareers(careersData?.length || 0);
 
-      // Fetch new applications
-      const { data: applicationsData, error: applicationsError } = await supabase
-        .from('applications') // Correct table name 'applications'
-        .select('id')
-        .eq('status', 'Pending'); // Assuming you have a 'status' field to filter new applications
-      if (applicationsError) {
-        console.error('Error fetching applications:', applicationsError);
-      } else {
-        setNewApplications(applicationsData.length);
-      }
+        const { data: applicationsData } = await supabase
+          .from('applications')
+          .select('id')
+          .eq('status', 'Shortlisted');
+        setNewApplications(applicationsData?.length || 0);
 
-      // Fetch recent activity (assuming you have an 'activity' table)
-      const { data: activityData, error: activityError } = await supabase
-        .from('activity') // Assuming you have an 'activity' table
-        .select('id, type, message, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5); // Fetch the 5 most recent activities
-      if (activityError) {
-        console.error('Error fetching activity:', activityError);
-      } else {
-        setRecentActivities(activityData);
+        const { data: activityData } = await supabase
+          .from('activity')
+          .select('id, action_type, description, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        setRecentActivities(activityData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
     };
 
     fetchData();
-  }, []);
+  }, [loading]);
 
   const statCards = [
     { title: 'Total Services', value: totalServices, color: 'bg-indigo-500' },
     { title: 'Total Careers', value: totalCareers, color: 'bg-emerald-500' },
     { title: 'New Applications', value: newApplications, color: 'bg-amber-500' },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -114,7 +141,7 @@ function Dashboard() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800">{activity.message}</p>
+                  <p className="font-medium text-gray-800">{activity.description}</p>
                   <p className="text-sm text-gray-500 mt-1">
                     {new Date(activity.created_at).toLocaleString()}
                   </p>

@@ -1,26 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from './admin/supabaseClient'; // Import your Supabase client
-import { Users, Briefcase, Search, Code, Database, Globe, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // ⬅️ Import useNavigate
+import { supabase } from './admin/supabaseClient';
+import { Users, Briefcase, Search, Code, Globe, MapPin } from 'lucide-react';
 
 function Careers() {
-  const [jobListings, setJobListings] = useState([]); // State to hold the job listings
+  const [jobListings, setJobListings] = useState([]);
+  const navigate = useNavigate(); // ⬅️ Initialize navigate
 
-  // Fetch job listings from Supabase on component mount
   useEffect(() => {
     const fetchJobListings = async () => {
       const { data, error } = await supabase
-        .from('job_listings') // Replace with your actual table name
-        .select('*'); // Select all job listings
+        .from('job_listings')
+        .select('*');
 
       if (error) {
         console.error("Error fetching job listings:", error);
       } else {
-        setJobListings(data); // Set the fetched job listings to state
+        setJobListings(data);
       }
     };
 
     fetchJobListings();
-  }, []); // Empty array ensures this effect runs only once
+  }, []);
 
   return (
     <div className="py-16 bg-gradient-to-b from-blue-50 to-white">
@@ -52,7 +53,7 @@ function Careers() {
           </div>
         </div>
 
-        {/* Display job listings dynamically */}
+        {/* Job listings */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {jobListings.map((job) => (
             <div key={job.id} className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition duration-300">
@@ -65,11 +66,9 @@ function Careers() {
                   <MapPin size={18} className="mr-2" />
                   <span>{job.location}</span>
                 </div>
-                <p className="text-gray-600 mb-6">
-                  {job.description}
-                </p>
-                
-                {/* Display skills dynamically */}
+                <p className="text-gray-600 mb-6">{job.description}</p>
+
+                {/* Skills */}
                 <div className="flex flex-wrap gap-2 mb-6">
                   {job.skills && job.skills.map((skill, index) => (
                     <span key={index} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
@@ -77,17 +76,23 @@ function Careers() {
                     </span>
                   ))}
                 </div>
-                <a href="/application" className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300">
+
+                {/* Apply Now button */}
+                <button
+                  onClick={() => navigate(`/application/${job.id}`)}
+                  className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300"
+                >
                   Apply Now
                   <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                   </svg>
-                </a>
+                </button>
               </div>
             </div>
           ))}
         </div>
 
+        {/* Contact Section */}
         <div className="bg-blue-600 rounded-lg shadow-lg p-8 text-white">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="mb-6 md:mb-0">
@@ -108,3 +113,4 @@ function Careers() {
 }
 
 export default Careers;
+// This code defines a React component for a "Careers" page. It fetches job listings from a Supabase database and displays them in a grid format. Each job listing includes the job title, location, description, and skills required. Users can click the "Apply Now" button to navigate to an application page for that specific job. The page also includes a contact section for users to reach out if they don't see a suitable position.

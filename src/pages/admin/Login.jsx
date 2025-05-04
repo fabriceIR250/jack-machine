@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from './supabaseClient';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -14,16 +15,35 @@ function Login() {
     setIsLoading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (username === 'admin' && password === 'password') {
-        navigate('/admin/dashboard');
-      } else {
-        setError('Invalid username or password');
+      // Query the admin_users table for the provided username
+      const { data: admin, error: queryError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('username', username)
+        .single();
+
+      if (queryError || !admin) {
+        throw new Error('Invalid username or password');
       }
+
+      // In a real app, you would verify a hashed password here
+      // For now we'll do direct comparison (not secure for production)
+      if (admin.password !== password) {
+        throw new Error('Invalid username or password');
+      }
+
+      // Store minimal admin info in localStorage
+      localStorage.setItem('adminAuth', JSON.stringify({
+        id: admin.id,
+        username: admin.username,
+        isAuthenticated: true,
+        // Add any other relevant admin data
+      }));
+
+      // Redirect to admin dashboard
+      navigate('/admin/dashboard');
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
