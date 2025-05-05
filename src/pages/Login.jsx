@@ -25,7 +25,7 @@ const Login = () => {
       if (authError) throw authError;
       
       if (data.user) {
-        navigate('/dashboard');
+        navigate('/users/dashboard');
       }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -43,7 +43,7 @@ const Login = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/dashboard',
+          redirectTo: window.location.origin + '/users/dashboard',
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

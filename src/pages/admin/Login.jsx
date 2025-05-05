@@ -164,7 +164,7 @@ function Login() {
           {/* Footer */}
           <div className="bg-gray-50 px-6 py-4 text-center">
             <p className="text-xs text-gray-500">
-              © {new Date().getFullYear()} Your Company. All rights reserved.
+              © {new Date().getFullYear()} Jack Machine . All rights reserved.
             </p>
           </div>
         </div>

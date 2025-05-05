@@ -40,7 +40,7 @@ const SignUp = () => {
       if (isPhone) {
         navigate('users/verify-phone', { state: { phone: signUpData.phone } });
       } else {
-        navigate('users/verify-email', { state: { email: identifier } });
+        navigate('/users/verify-email', { state: { email: identifier } });
       }
     } catch (err) {
       setError(err.message || 'Sign up failed. Please try again.');
