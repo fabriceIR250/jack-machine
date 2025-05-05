@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 import Home from './pages/Home';
@@ -8,7 +8,9 @@ import Contact from './pages/Contact';
 import Application from './pages/Application';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-//  admin router
+import SplashScreen from './components/splash/SplashScreen';
+
+// Admin router
 import Dashboard from './pages/admin/Dashboard';
 import ManageServices from './pages/admin/ManageServices';
 import ManageCareers from './pages/admin/ManageCareers';
@@ -16,7 +18,6 @@ import ManageApplications from './pages/admin/ManageApplications';
 import Login from './pages/admin/Login';
 import AdminNavbar from './components/AdminNavbar';
 import ManageMessages from './pages/admin/ManageMessages';
-
 
 import SignUp from './pages/SignUp';
 import Login1 from './pages/Login';
@@ -31,9 +32,31 @@ import Profile from './pages/users/Profile';
 import Contact2 from './pages/users/Contact';
 import VerifyEmail from './pages/users/EmailVerification';
 
-
-
 function App() {
+  const [showingSplash, setShowingSplash] = useState(true);
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
+
+  useEffect(() => {
+    // Check if user has visited before
+    const hasVisited = localStorage.getItem('hasVisitedBefore');
+    if (hasVisited) {
+      setIsFirstVisit(false);
+      setShowingSplash(false);
+    } else {
+      // Set flag that user has visited the site
+      localStorage.setItem('hasVisitedBefore', 'true');
+    }
+  }, []);
+
+  const handleSplashFinished = () => {
+    setShowingSplash(false);
+  };
+
+  // Show splash screen for first time visitors
+  if (showingSplash && isFirstVisit) {
+    return <SplashScreen onFinished={handleSplashFinished} />;
+  }
+
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
@@ -74,4 +97,3 @@ function App() {
 }
 
 export default App;
-// This is the main entry point of the application.
