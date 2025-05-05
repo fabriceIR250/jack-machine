@@ -82,6 +82,12 @@ function Footer() {
                   Contact
                 </a>
               </li>
+              <li>
+                <a href="/admin/dashboard" className="text-blue-100 hover:text-white transition duration-300 flex items-center">
+                  <ArrowUp size={12} className="mr-2 transform rotate-45" />
+                  Admin
+                </a>
+              </li>
             </ul>
           </div>
 
