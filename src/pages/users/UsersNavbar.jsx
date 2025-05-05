@@ -155,7 +155,7 @@ const UsersNavbar = () => {
               </button>
               
               <NavLink 
-                to="/user/dashboard" 
+                to="/users/dashboard" 
                 className={({ isActive }) => `flex items-center group transition-all ${isActive ? 'text-white' : 'text-white/80 hover:text-white'}`}
               >
                 <div className="bg-white/10 group-hover:bg-white/20 p-2 rounded-lg transition-all">
@@ -184,7 +184,7 @@ const UsersNavbar = () => {
               </NavLink>
               
               <NavLink 
-                to="/contact" 
+                to="/users/contact" 
                 className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition-all ${isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
               >
                 <FaPhoneAlt className="mr-2" />
@@ -265,7 +265,7 @@ const UsersNavbar = () => {
               </NavLink>
               
               <NavLink 
-                to="/contact" 
+                to="users/contact" 
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) => `flex items-center px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
               >

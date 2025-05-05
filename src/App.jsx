@@ -28,7 +28,7 @@ import Dashboard1 from './pages/users/Dashboard';
 import Jobs from './pages/users/Jobs';
 import Result from './pages/users/Result';
 import Profile from './pages/users/Profile';
-import Contact2 from './pages/users/Contact2';
+import Contact2 from './pages/users/Contact';
 import VerifyEmail from './pages/users/EmailVerification';
 
 
